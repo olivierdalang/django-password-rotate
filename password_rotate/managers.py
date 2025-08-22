@@ -36,7 +36,10 @@ class PasswordHistoryManager(models.Manager):
         if user.check_password(raw_password):
             result = False
         else:
-            entries = self.filter(user=user).all()[:self.default_offset]
+            # deal with django's createsuperuser checking unsaved instances
+            if not user._is_pk_set():
+                return True
+            entries = self.filter(user=user).all()[: self.default_offset]
             for entry in entries:
                 hasher = identify_hasher(entry.password)
                 if hasher.verify(raw_password, entry.password):
